@@ -14,13 +14,23 @@ export interface GoogleReviewsSource {
   topCriticisms?: string[];
 }
 
+export interface ReclameAquiIndicator {
+  label: string;
+  value: string;
+}
+
 export interface ReclameAquiSource {
   available: boolean;
+  name?: string;
   score?: number;
   solveRatePercent?: number;
   totalComplaints?: number;
   respondedCount?: number;
+  respondedPercent?: number;
+  reputationStatus?: string;
+  indicators?: ReclameAquiIndicator[];
   profileUrl?: string;
+  notFoundMessage?: string;
 }
 
 export interface ConsumidorGovIndicator {

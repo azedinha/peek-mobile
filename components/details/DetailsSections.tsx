@@ -112,12 +112,15 @@ export function DetailsSections({ result }: { result: PeekAnalysisResult }) {
         <SectionTitle>Reclame Aqui</SectionTitle>
         {reclameAqui.available ? (
           <View style={styles.sectionBody}>
+            {reclameAqui.name ? (
+              <DetailRow label="Empresa" value={reclameAqui.name} />
+            ) : null}
             <View style={styles.metricsRow}>
               <DetailRow
                 label="Nota"
                 value={
                   reclameAqui.score != null
-                    ? reclameAqui.score.toFixed(1)
+                    ? `${reclameAqui.score.toFixed(1)} / 10`
                     : "—"
                 }
               />
@@ -135,11 +138,27 @@ export function DetailsSections({ result }: { result: PeekAnalysisResult }) {
               value={
                 reclameAqui.respondedCount != null
                   ? reclameAqui.respondedCount.toLocaleString("pt-BR")
-                  : reclameAqui.solveRatePercent != null
-                    ? `${reclameAqui.solveRatePercent}%`
+                  : reclameAqui.respondedPercent != null
+                    ? `${reclameAqui.respondedPercent}%`
                     : "—"
               }
             />
+            {reclameAqui.indicators?.length ? (
+              <>
+                <Text style={styles.subheading}>Indicadores disponíveis</Text>
+                <View style={styles.indicatorList}>
+                  {reclameAqui.indicators.map((indicator) => (
+                    <View
+                      key={`${indicator.label}-${indicator.value}`}
+                      style={styles.indicatorRow}
+                    >
+                      <Text style={styles.indicatorLabel}>{indicator.label}</Text>
+                      <Text style={styles.indicatorValue}>{indicator.value}</Text>
+                    </View>
+                  ))}
+                </View>
+              </>
+            ) : null}
             {reclameAqui.profileUrl ? (
               <Button
                 fullWidth
@@ -152,7 +171,8 @@ export function DetailsSections({ result }: { result: PeekAnalysisResult }) {
           </View>
         ) : (
           <Text style={styles.emptyText}>
-            Dados do Reclame Aqui ainda não coletados para este estabelecimento.
+            {reclameAqui.notFoundMessage ??
+              "Dados do Reclame Aqui ainda não coletados para este estabelecimento."}
           </Text>
         )}
       </Card>

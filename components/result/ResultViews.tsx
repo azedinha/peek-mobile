@@ -164,9 +164,12 @@ function getSourceHint(
       }
       return "Dados encontrados";
     case "reclameAqui":
-      return result.reclameAqui.available
-        ? "Dados encontrados"
-        : "Ainda não coletado";
+      if (result.reclameAqui.available) {
+        return result.reclameAqui.score != null
+          ? `Nota ${result.reclameAqui.score.toFixed(1)} / 10`
+          : "Dados encontrados";
+      }
+      return result.reclameAqui.notFoundMessage ?? "Não encontrado";
     case "consumidorGov":
       return result.consumidorGov.available
         ? "Dados encontrados"
