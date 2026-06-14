@@ -40,7 +40,7 @@ export function SourceDetailSections({ result }: { result: PeekAnalysisResult })
             </Text>
             {result.google.profileUrl && (
               <ExternalLink
-                label="Ver no Google Maps"
+                label="Abrir no Google"
                 url={result.google.profileUrl}
               />
             )}
