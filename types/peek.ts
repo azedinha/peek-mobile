@@ -10,6 +10,8 @@ export interface GoogleReviewsSource {
   rating?: number;
   totalReviews?: number;
   profileUrl?: string;
+  topPraises?: string[];
+  topCriticisms?: string[];
 }
 
 export interface ReclameAquiSource {
@@ -17,13 +19,21 @@ export interface ReclameAquiSource {
   score?: number;
   solveRatePercent?: number;
   totalComplaints?: number;
+  respondedCount?: number;
   profileUrl?: string;
+}
+
+export interface ConsumidorGovIndicator {
+  label: string;
+  value: string;
 }
 
 export interface ConsumidorGovSource {
   available: boolean;
+  registered?: boolean | null;
   totalComplaints?: number;
   resolvedPercent?: number;
+  indicators?: ConsumidorGovIndicator[];
   profileUrl?: string;
 }
 
