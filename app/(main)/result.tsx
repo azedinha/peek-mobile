@@ -85,10 +85,9 @@ export default function ResultScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.eyebrow}>Resumo</Text>
         <ResultSummaryView result={result} />
         <Button fullWidth onPress={() => router.push(DETAILS_ROUTE)}>
-          Ver detalhes completos
+          Ver detalhes
         </Button>
       </ScrollView>
     </SafeAreaView>
@@ -122,13 +121,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.xl,
     gap: theme.spacing.sm + 4,
-  },
-  eyebrow: {
-    ...theme.typography.caption,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    paddingHorizontal: theme.spacing.xs,
-    paddingTop: theme.spacing.sm,
   },
   errorText: {
     fontSize: 15,

@@ -203,7 +203,7 @@ export function EstablishmentCard({ result }: { result: PeekAnalysisResult }) {
         <View style={styles.establishmentInfo}>
           <Text style={styles.establishmentName}>{establishment.name}</Text>
           {establishment.category ? (
-            <Text style={styles.category}>{establishment.category}</Text>
+            <Text style={styles.category}>{establishment.category.toUpperCase()}</Text>
           ) : null}
           <View style={styles.badges}>
             {establishment.isOpen === true && (
@@ -261,7 +261,7 @@ export function PopularityCard({ result }: { result: PeekAnalysisResult }) {
         <View style={styles.popularityBody}>
           <Text style={styles.popularityScore}>
             {result.google.rating.toFixed(1)}
-            <Text style={styles.popularityMax}> / 5</Text>
+            <Text style={styles.popularityMax}> ★ / 5</Text>
           </Text>
           <Text style={styles.popularityMeta}>
             {result.google.totalReviews.toLocaleString("pt-BR")} avaliações no
@@ -271,6 +271,92 @@ export function PopularityCard({ result }: { result: PeekAnalysisResult }) {
       ) : (
         <Text style={styles.unavailable}>
           Dados de popularidade não disponíveis para este estabelecimento.
+        </Text>
+      )}
+    </Card>
+  );
+}
+
+function CommunityHighlight({
+  label,
+  items,
+  tone,
+}: {
+  label: string;
+  items: string[];
+  tone: "good" | "critical";
+}) {
+  if (!items.length) return null;
+
+  return (
+    <View style={styles.communityBlock}>
+      <Text
+        style={[
+          styles.communityLabel,
+          tone === "good" ? styles.communityLabelGood : styles.communityLabelCritical,
+        ]}
+      >
+        {label}
+      </Text>
+      {items.map((item) => (
+        <Text
+          key={item}
+          style={[
+            styles.communityItem,
+            tone === "good" ? styles.communityItemGood : styles.communityItemCritical,
+          ]}
+          numberOfLines={2}
+        >
+          {item}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
+export function CommunityRatingCard({ result }: { result: PeekAnalysisResult }) {
+  const praises = result.google.topPraises?.slice(0, 2) ?? [];
+  const criticisms = result.google.topCriticisms?.slice(0, 2) ?? [];
+  const hasGoogleHighlights = praises.length > 0 || criticisms.length > 0;
+  const hasReclameAqui =
+    result.reclameAqui.available &&
+    (result.reclameAqui.score != null ||
+      result.reclameAqui.solveRatePercent != null ||
+      result.reclameAqui.reputationStatus);
+
+  return (
+    <Card>
+      <Text style={styles.sectionTitle}>Avaliação da comunidade</Text>
+      {hasGoogleHighlights ? (
+        <View style={styles.communityBody}>
+          <CommunityHighlight label="Principais elogios" items={praises} tone="good" />
+          <CommunityHighlight
+            label="Principais críticas"
+            items={criticisms}
+            tone="critical"
+          />
+          <Text style={styles.communitySource}>Fonte: Google Reviews</Text>
+        </View>
+      ) : hasReclameAqui ? (
+        <View style={styles.communityBody}>
+          {result.reclameAqui.score != null && (
+            <Text style={styles.sourceLine}>
+              Nota Reclame Aqui: {result.reclameAqui.score.toFixed(1)} / 10
+            </Text>
+          )}
+          {result.reclameAqui.solveRatePercent != null && (
+            <Text style={styles.sourceLine}>
+              Taxa de solução: {result.reclameAqui.solveRatePercent}%
+            </Text>
+          )}
+          {result.reclameAqui.reputationStatus ? (
+            <Text style={styles.unavailable}>{result.reclameAqui.reputationStatus}</Text>
+          ) : null}
+        </View>
+      ) : (
+        <Text style={styles.unavailable}>
+          Ainda não há avaliações suficientes da comunidade para este
+          estabelecimento.
         </Text>
       )}
     </Card>
@@ -318,11 +404,12 @@ export function ResultSummaryView({ result }: { result: PeekAnalysisResult }) {
   return (
     <View style={styles.summaryStack}>
       <EstablishmentCard result={result} />
+      <PopularityCard result={result} />
+      <CommunityRatingCard result={result} />
+      <SourcesFoundCard result={result} />
       {result.peekSummary ? (
         <PeekSummaryCard summary={result.peekSummary} clampLines />
       ) : null}
-      <PopularityCard result={result} />
-      <SourcesFoundCard result={result} />
     </View>
   );
 }
@@ -351,7 +438,9 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
   category: {
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: "500",
+    letterSpacing: 0.5,
     color: theme.colors.textSecondary,
   },
   badges: {
@@ -429,6 +518,40 @@ const styles = StyleSheet.create({
   popularityMeta: {
     fontSize: 14,
     color: theme.colors.textSecondary,
+  },
+  communityBody: {
+    gap: theme.spacing.sm,
+  },
+  communityBlock: {
+    gap: theme.spacing.xs,
+  },
+  communityLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  communityLabelGood: {
+    color: theme.colors.primary,
+  },
+  communityLabelCritical: {
+    color: theme.colors.error,
+  },
+  communityItem: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: theme.colors.primary,
+    paddingLeft: 12,
+    borderLeftWidth: 2,
+  },
+  communityItemGood: {
+    borderLeftColor: theme.colors.border,
+  },
+  communityItemCritical: {
+    borderLeftColor: theme.colors.error,
+  },
+  communitySource: {
+    ...theme.typography.caption,
   },
   sourcesList: {
     gap: theme.spacing.sm,
