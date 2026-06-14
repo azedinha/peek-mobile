@@ -38,7 +38,9 @@ export default function DetailsScreen() {
           <Text style={styles.eyebrow}>Detalhes</Text>
           <Text style={styles.title}>{result.establishment.name}</Text>
           {result.establishment.category ? (
-            <Text style={styles.category}>{result.establishment.category}</Text>
+            <Text style={styles.category}>
+              {result.establishment.category.toUpperCase()}
+            </Text>
           ) : null}
         </View>
 
@@ -80,7 +82,9 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   category: {
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: "500",
+    letterSpacing: 0.5,
     color: theme.colors.textSecondary,
   },
   footer: {
