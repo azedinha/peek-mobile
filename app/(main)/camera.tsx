@@ -249,6 +249,13 @@ export default function CameraScreen() {
           </Pressable>
 
           <View style={styles.topActions}>
+            <Pressable
+              accessibilityLabel="Histórico"
+              style={styles.iconButton}
+              onPress={() => router.push("/(main)/history")}
+            >
+              <Text style={styles.iconButtonText}>Histórico</Text>
+            </Pressable>
             {facing === "back" ? (
               <Pressable
                 accessibilityLabel={`Flash ${getFlashLabel(flash)}`}

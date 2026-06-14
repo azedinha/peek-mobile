@@ -8,7 +8,8 @@ import { LoadingView } from "@/components/ui/LoadingView";
 import { ResultSummaryView } from "@/components/result/ResultViews";
 import { analyzeCapture } from "@/lib/api";
 import { theme } from "@/constants/theme";
-import { getCaptureSession, saveAnalysisResult } from "@/lib/session";
+import { getCaptureSession, getAnalysisResult, saveAnalysisResult } from "@/lib/session";
+import { addHistoryEntry } from "@/lib/history";
 import type { PeekAnalysisResult } from "@/types/peek";
 
 type PageState = "loading" | "error" | "ready";
@@ -33,9 +34,17 @@ export default function ResultScreen() {
         return;
       }
 
+      const cached = await getAnalysisResult();
+      if (cached && cached.capturedAt === session.capturedAt) {
+        setResult(cached);
+        setState("ready");
+        return;
+      }
+
       try {
         const data = await analyzeCapture(session);
         await saveAnalysisResult(data);
+        await addHistoryEntry(session, data);
         setResult(data);
         setState("ready");
       } catch (err) {

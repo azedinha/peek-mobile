@@ -105,6 +105,17 @@ export interface CaptureSession {
   capturedAt: string;
 }
 
+export interface AnalysisHistoryEntry {
+  id: string;
+  photo: string;
+  lat: number;
+  lng: number;
+  accuracy?: number;
+  capturedAt: string;
+  result: PeekAnalysisResult;
+  savedAt: string;
+}
+
 export interface AnalyzeRequest {
   photo: string;
   lat: number;
