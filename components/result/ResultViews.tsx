@@ -1,5 +1,6 @@
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { Card } from "@/components/ui/Card";
+import { CommunityRatingSection } from "@/components/result/CommunityRatingSection";
 import { theme } from "@/constants/theme";
 import type { PeekAnalysisResult } from "@/types/peek";
 
@@ -277,92 +278,6 @@ export function PopularityCard({ result }: { result: PeekAnalysisResult }) {
   );
 }
 
-function CommunityHighlight({
-  label,
-  items,
-  tone,
-}: {
-  label: string;
-  items: string[];
-  tone: "good" | "critical";
-}) {
-  if (!items.length) return null;
-
-  return (
-    <View style={styles.communityBlock}>
-      <Text
-        style={[
-          styles.communityLabel,
-          tone === "good" ? styles.communityLabelGood : styles.communityLabelCritical,
-        ]}
-      >
-        {label}
-      </Text>
-      {items.map((item) => (
-        <Text
-          key={item}
-          style={[
-            styles.communityItem,
-            tone === "good" ? styles.communityItemGood : styles.communityItemCritical,
-          ]}
-          numberOfLines={2}
-        >
-          {item}
-        </Text>
-      ))}
-    </View>
-  );
-}
-
-export function CommunityRatingCard({ result }: { result: PeekAnalysisResult }) {
-  const praises = result.google.topPraises?.slice(0, 2) ?? [];
-  const criticisms = result.google.topCriticisms?.slice(0, 2) ?? [];
-  const hasGoogleHighlights = praises.length > 0 || criticisms.length > 0;
-  const hasReclameAqui =
-    result.reclameAqui.available &&
-    (result.reclameAqui.score != null ||
-      result.reclameAqui.solveRatePercent != null ||
-      result.reclameAqui.reputationStatus);
-
-  return (
-    <Card>
-      <Text style={styles.sectionTitle}>Avaliação da comunidade</Text>
-      {hasGoogleHighlights ? (
-        <View style={styles.communityBody}>
-          <CommunityHighlight label="Principais elogios" items={praises} tone="good" />
-          <CommunityHighlight
-            label="Principais críticas"
-            items={criticisms}
-            tone="critical"
-          />
-          <Text style={styles.communitySource}>Fonte: Google Reviews</Text>
-        </View>
-      ) : hasReclameAqui ? (
-        <View style={styles.communityBody}>
-          {result.reclameAqui.score != null && (
-            <Text style={styles.sourceLine}>
-              Nota Reclame Aqui: {result.reclameAqui.score.toFixed(1)} / 10
-            </Text>
-          )}
-          {result.reclameAqui.solveRatePercent != null && (
-            <Text style={styles.sourceLine}>
-              Taxa de solução: {result.reclameAqui.solveRatePercent}%
-            </Text>
-          )}
-          {result.reclameAqui.reputationStatus ? (
-            <Text style={styles.unavailable}>{result.reclameAqui.reputationStatus}</Text>
-          ) : null}
-        </View>
-      ) : (
-        <Text style={styles.unavailable}>
-          Ainda não há avaliações suficientes da comunidade para este
-          estabelecimento.
-        </Text>
-      )}
-    </Card>
-  );
-}
-
 export function SourcesFoundCard({ result }: { result: PeekAnalysisResult }) {
   return (
     <Card>
@@ -405,7 +320,7 @@ export function ResultSummaryView({ result }: { result: PeekAnalysisResult }) {
     <View style={styles.summaryStack}>
       <EstablishmentCard result={result} />
       <PopularityCard result={result} />
-      <CommunityRatingCard result={result} />
+      <CommunityRatingSection result={result} />
       <SourcesFoundCard result={result} />
       {result.peekSummary ? (
         <PeekSummaryCard summary={result.peekSummary} clampLines />

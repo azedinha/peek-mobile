@@ -1,5 +1,12 @@
-import type { AnalyzeRequest, CaptureSession, PeekAnalysisResult } from "@/types/peek";
-import { config, isApiConfigured } from "./config";
+import type {
+  AnalyzeRequest,
+  CaptureSession,
+  CommunityRatingSource,
+  CommunityRatingValue,
+  PeekAnalysisResult,
+} from "@/types/peek";
+import { config, isApiConfigured, isSupabaseConfigured } from "./config";
+import { getSupabase } from "./supabase";
 
 const ANALYZE_TIMEOUT_MS = 90_000;
 
@@ -121,9 +128,10 @@ export async function analyzeCapture(
   const timeoutId = setTimeout(() => controller.abort(), ANALYZE_TIMEOUT_MS);
 
   try {
+    const headers = await getAuthHeaders();
     const response = await fetch(getAnalyzeUrl(), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(body),
       signal: controller.signal,
     });
@@ -154,4 +162,84 @@ export async function analyzeCapture(
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+function getCommunityRatingUrl(establishmentKey?: string): string {
+  if (!isApiConfigured()) {
+    throw new AnalyzeApiError(
+      "API não configurada. Defina EXPO_PUBLIC_API_URL no arquivo .env.",
+      undefined,
+      "config"
+    );
+  }
+
+  const base = config.apiUrl.replace(/\/$/, "");
+  if (establishmentKey) {
+    return `${base}/api/community-rating?establishmentKey=${encodeURIComponent(establishmentKey)}`;
+  }
+  return `${base}/api/community-rating`;
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (!isSupabaseConfigured()) {
+    return headers;
+  }
+
+  const {
+    data: { session },
+  } = await getSupabase().auth.getSession();
+
+  if (session?.access_token) {
+    headers.Authorization = `Bearer ${session.access_token}`;
+  }
+
+  return headers;
+}
+
+export async function fetchCommunityRating(
+  establishmentKey: string
+): Promise<CommunityRatingSource | null> {
+  try {
+    const headers = await getAuthHeaders();
+    const response = await fetch(getCommunityRatingUrl(establishmentKey), {
+      headers,
+    });
+
+    if (!response.ok) return null;
+    return (await response.json()) as CommunityRatingSource;
+  } catch {
+    return null;
+  }
+}
+
+export async function submitCommunityRatingVote(input: {
+  establishmentKey: string;
+  establishmentName: string;
+  establishmentAddress?: string;
+  rating: CommunityRatingValue;
+}): Promise<CommunityRatingSource> {
+  const headers = await getAuthHeaders();
+  const response = await fetch(getCommunityRatingUrl(), {
+    method: "POST",
+    headers,
+    body: JSON.stringify(input),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new AnalyzeApiError(
+      typeof data?.error === "string"
+        ? data.error
+        : "Falha ao salvar avaliação.",
+      response.status,
+      response.status === 401 ? "validation" : "unknown"
+    );
+  }
+
+  return data as CommunityRatingSource;
 }

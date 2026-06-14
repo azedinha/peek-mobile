@@ -73,6 +73,26 @@ export interface SocialSource {
   links?: SocialLink[];
 }
 
+export type CommunityRatingValue =
+  | "excelente"
+  | "boa"
+  | "ruim"
+  | "pessima";
+
+export interface CommunityRatingBreakdown {
+  rating: CommunityRatingValue;
+  label: string;
+  count: number;
+  percent: number;
+}
+
+export interface CommunityRatingSource {
+  available: boolean;
+  totalVotes: number;
+  userRating: CommunityRatingValue | null;
+  breakdown: CommunityRatingBreakdown[];
+}
+
 export type IdentificationMode = "confirmed" | "proximity_hypothesis";
 
 export interface PeekAnalysisResult {
@@ -89,6 +109,7 @@ export interface PeekAnalysisResult {
   consumidorGov: ConsumidorGovSource;
   news: NewsSource;
   social: SocialSource;
+  communityRating?: CommunityRatingSource;
   peekSummary: string | null;
   analyzedAt: string;
   capturedAt: string;
