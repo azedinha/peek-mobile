@@ -40,11 +40,13 @@ export interface ConsumidorGovIndicator {
 
 export interface ConsumidorGovSource {
   available: boolean;
+  name?: string;
   registered?: boolean | null;
   totalComplaints?: number;
   resolvedPercent?: number;
   indicators?: ConsumidorGovIndicator[];
   profileUrl?: string;
+  notFoundMessage?: string;
 }
 
 export interface NewsHighlight {

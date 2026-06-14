@@ -171,9 +171,12 @@ function getSourceHint(
       }
       return result.reclameAqui.notFoundMessage ?? "Não encontrado";
     case "consumidorGov":
-      return result.consumidorGov.available
-        ? "Dados encontrados"
-        : "Ainda não coletado";
+      if (result.consumidorGov.available) {
+        return result.consumidorGov.resolvedPercent != null
+          ? `Solução ${result.consumidorGov.resolvedPercent}%`
+          : "Cadastrada";
+      }
+      return result.consumidorGov.notFoundMessage ?? "Não cadastrada";
     case "news":
       return result.news.available
         ? `${result.news.totalCount ?? 0} notícia${result.news.totalCount === 1 ? "" : "s"}`

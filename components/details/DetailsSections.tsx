@@ -181,6 +181,9 @@ export function DetailsSections({ result }: { result: PeekAnalysisResult }) {
         <SectionTitle>Consumidor.gov</SectionTitle>
         {consumidorGov.available ? (
           <View style={styles.sectionBody}>
+            {consumidorGov.name ? (
+              <DetailRow label="Empresa" value={consumidorGov.name} />
+            ) : null}
             <DetailRow label="Status cadastrado" value={registeredLabel} />
             <Text style={styles.subheading}>Indicadores encontrados</Text>
             {consumidorGov.indicators?.length ? (
@@ -198,15 +201,20 @@ export function DetailsSections({ result }: { result: PeekAnalysisResult }) {
             ) : (
               <Text style={styles.emptyText}>Nenhum indicador encontrado.</Text>
             )}
+            {consumidorGov.profileUrl ? (
+              <Button
+                variant="outline"
+                onPress={() => Linking.openURL(consumidorGov.profileUrl!)}
+              >
+                Abrir no Consumidor.gov
+              </Button>
+            ) : null}
           </View>
         ) : (
-          <View style={styles.sectionBody}>
-            <DetailRow label="Status cadastrado" value={registeredLabel} />
-            <Text style={styles.emptyText}>
-              Dados do Consumidor.gov ainda não coletados para este
-              estabelecimento.
-            </Text>
-          </View>
+          <Text style={styles.emptyText}>
+            {consumidorGov.notFoundMessage ??
+              "Dados do Consumidor.gov ainda não coletados para este estabelecimento."}
+          </Text>
         )}
       </Card>
 
