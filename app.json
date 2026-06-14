@@ -1,25 +1,73 @@
 {
   "expo": {
-    "name": "peek-mobile",
+    "name": "Peek",
     "slug": "peek-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "scheme": "peek",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.peek.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Peek precisa da câmera para fotografar a fachada do estabelecimento.",
+        "NSLocationWhenInUseUsageDescription": "Peek usa sua localização para identificar o estabelecimento."
+      }
     },
     "android": {
+      "package": "com.peek.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "imageWidth": 200
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Peek precisa da câmera para fotografar a fachada do estabelecimento."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Peek usa sua localização para identificar o estabelecimento."
+        }
+      ],
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3997b93d-03b6-4679-86aa-2cb628242772"
+      }
+    },
+    "owner": "diegorozzante"
   }
 }
