@@ -1,30 +1,34 @@
-import { View, Text, StyleSheet } from "react-native";
-import { theme } from "@/constants/theme";
+import { Image, StyleSheet, View } from "react-native";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg";
 }
 
+/** Proporção do arquivo oficial (940 × 788 px). */
+const LOGO_ASPECT = 788 / 940;
+
 const sizeMap = {
-  sm: 28,
-  md: 36,
-  lg: 44,
-};
+  sm: 160,
+  md: 220,
+  lg: 280,
+} as const;
 
 export function Logo({ size = "lg" }: LogoProps) {
-  const fontSize = sizeMap[size];
+  const width = sizeMap[size];
+  const height = Math.round(width * LOGO_ASPECT);
 
   return (
-    <View style={styles.container} accessibilityLabel="Peek" accessibilityRole="image">
-      <View style={styles.eyes}>
-        <View style={styles.eye}>
-          <View style={styles.pupil} />
-        </View>
-        <View style={styles.eye}>
-          <View style={styles.pupil} />
-        </View>
-      </View>
-      <Text style={[styles.wordmark, { fontSize }]}>Peek</Text>
+    <View
+      style={[styles.container, { width, height }]}
+      accessibilityLabel="Peek"
+      accessibilityRole="image"
+    >
+      <Image
+        source={require("../assets/logo-wordmark.png")}
+        style={styles.image}
+        resizeMode="contain"
+        accessibilityIgnoresInvertColors
+      />
     </View>
   );
 }
@@ -32,32 +36,10 @@ export function Logo({ size = "lg" }: LogoProps) {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    gap: theme.spacing.sm,
-  },
-  eyes: {
-    flexDirection: "row",
-    gap: 20,
-  },
-  eye: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.white,
-    alignItems: "center",
     justifyContent: "center",
   },
-  pupil: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.primary,
-  },
-  wordmark: {
-    color: theme.colors.primary,
-    fontWeight: "600",
-    letterSpacing: -0.5,
-    fontFamily: "Georgia",
+  image: {
+    width: "100%",
+    height: "100%",
   },
 });

@@ -7,15 +7,16 @@ import { Button } from "@/components/ui/Button";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { useAuth } from "@/hooks/useAuth";
 import { signInWithOAuth } from "@/lib/auth";
-import { isDevBypassAuthEnabled } from "@/lib/config";
+import { isDevBypassAuthEnabled, isSupabaseConfigured } from "@/lib/config";
+import { HOME_ROUTE } from "@/lib/routes";
 import { theme } from "@/constants/theme";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { user, loading, signOut, isConfigured, continueWithoutLogin } =
-    useAuth();
+  const { loading, continueWithoutLogin } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isConfigured = isSupabaseConfigured();
 
   const handleOAuth = async (provider: "google" | "apple") => {
     if (!isConfigured) return;
@@ -25,7 +26,7 @@ export default function LoginScreen() {
 
     try {
       await signInWithOAuth(provider);
-      router.replace("/(main)/camera");
+      router.replace(HOME_ROUTE);
     } catch {
       setError("Não foi possível iniciar o login. Tente novamente.");
     } finally {
@@ -33,45 +34,13 @@ export default function LoginScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    await signOut();
-    setError(null);
-  };
-
   const handleContinueWithoutLogin = () => {
     continueWithoutLogin();
-    router.replace("/(main)/camera");
+    router.replace(HOME_ROUTE);
   };
 
   if (loading) {
     return <LoadingView />;
-  }
-
-  if (user) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.hero}>
-            <Logo size="lg" />
-            <Text style={styles.subtitle}>
-              {user.email ?? "Conta conectada"}
-            </Text>
-          </View>
-
-          <View style={styles.actions}>
-            <Button fullWidth onPress={() => router.replace("/(main)/camera")}>
-              Ir para câmera
-            </Button>
-            <Button variant="outline" fullWidth onPress={handleLogout}>
-              Sair
-            </Button>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    );
   }
 
   return (
@@ -82,7 +51,6 @@ export default function LoginScreen() {
       >
         <View style={styles.hero}>
           <Logo size="lg" />
-          <Text style={styles.title}>Peek</Text>
           <Text style={styles.lead}>
             Identifique estabelecimentos com uma foto e veja a reputação em um
             só lugar.
@@ -142,21 +110,14 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: "center",
     gap: theme.spacing.md,
-    paddingVertical: theme.spacing.lg,
-  },
-  title: {
-    ...theme.typography.largeTitle,
-    textAlign: "center",
+    paddingVertical: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg,
   },
   lead: {
     ...theme.typography.body,
     textAlign: "center",
     color: theme.colors.textSecondary,
     maxWidth: 320,
-  },
-  subtitle: {
-    ...theme.typography.caption,
-    textAlign: "center",
   },
   configHint: {
     ...theme.typography.caption,

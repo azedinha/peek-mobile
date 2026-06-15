@@ -1,140 +1,339 @@
 import { useEffect, useRef, useState } from "react";
+
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { useRouter, type Href } from "expo-router";
+
+import { useRouter } from "expo-router";
+
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { StackScreenChrome } from "@/components/navigation/StackScreenChrome";
+
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+
 import { Logo } from "@/components/Logo";
+
 import { Button } from "@/components/ui/Button";
+
 import { LoadingView } from "@/components/ui/LoadingView";
+
 import { ResultSummaryView } from "@/components/result/ResultViews";
-import { analyzeCapture } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+
+import { runAnalysisForSession } from "@/lib/analyze-session";
+
+import {
+
+  CAMERA_ROUTE,
+
+  DETAILS_ROUTE,
+
+  HOME_ROUTE,
+
+} from "@/lib/routes";
+
 import { theme } from "@/constants/theme";
+
 import { getCaptureSession, getAnalysisResult, saveAnalysisResult } from "@/lib/session";
+
 import { addHistoryEntry } from "@/lib/history";
+import { registerPendingEvaluationIfEligible } from "@/lib/evaluation-pending";
+
 import type { PeekAnalysisResult } from "@/types/peek";
+
+
 
 type PageState = "loading" | "error" | "ready";
 
-const DETAILS_ROUTE = "/(main)/details" as Href;
+
 
 export default function ResultScreen() {
+
   const router = useRouter();
+
+  const { user } = useAuth();
+
   const [state, setState] = useState<PageState>("loading");
+
   const [result, setResult] = useState<PeekAnalysisResult | null>(null);
+
   const [error, setError] = useState<string | null>(null);
+
   const fetchedRef = useRef(false);
 
+
+
+  const handleBack = () => {
+
+    if (router.canGoBack()) {
+
+      router.back();
+
+      return;
+
+    }
+
+    router.replace(HOME_ROUTE);
+
+  };
+
+
+
   useEffect(() => {
+
     if (fetchedRef.current) return;
+
     fetchedRef.current = true;
 
+
+
     (async () => {
+
       const session = await getCaptureSession();
+
       if (!session) {
-        router.replace("/(main)/camera");
+
+        router.replace(HOME_ROUTE);
+
         return;
+
       }
+
+
 
       const cached = await getAnalysisResult();
+
       if (cached && cached.capturedAt === session.capturedAt) {
+
         setResult(cached);
+
         setState("ready");
+
+        if (user) {
+
+          await registerPendingEvaluationIfEligible(session, cached);
+
+        }
+
         return;
+
       }
+
+
 
       try {
-        const data = await analyzeCapture(session);
+
+        const data = await runAnalysisForSession(session);
+
         await saveAnalysisResult(data);
+
         await addHistoryEntry(session, data);
+
+        if (user) {
+
+          await registerPendingEvaluationIfEligible(session, data);
+
+        }
+
         setResult(data);
+
         setState("ready");
+
       } catch (err) {
+
         const message =
+
           err instanceof Error
+
             ? err.message
+
             : "Falha na análise. Tente novamente.";
+
         setError(message);
+
         setState("error");
+
       }
+
     })();
-  }, [router]);
+
+  }, [router, user]);
+
+
 
   if (state === "loading") {
+
     return (
-      <SafeAreaView style={styles.safe}>
+
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+
+        <StackScreenChrome onBack={handleBack} />
+
         <View style={styles.loadingContent}>
+
           <Logo size="md" />
-          <Text style={styles.loadingText}>
-            Identificando estabelecimento...
-          </Text>
+
+          <Text style={styles.loadingText}>Analisando estabelecimento...</Text>
+
         </View>
+
       </SafeAreaView>
+
     );
+
   }
+
+
 
   if (state === "error") {
+
     return (
-      <SafeAreaView style={styles.safe}>
+
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+
+        <StackScreenChrome onBack={handleBack} />
+
         <View style={styles.centerContent}>
+
+          <ScreenHeader eyebrow="Resultado" title="Análise indisponível" />
+
           <Text style={styles.errorText}>{error}</Text>
-          <Button fullWidth onPress={() => router.replace("/(main)/camera")}>
+
+          <Button fullWidth onPress={() => router.replace(CAMERA_ROUTE)}>
+
             Tentar novamente
+
           </Button>
+
+          <Button variant="outline" fullWidth onPress={() => router.replace(HOME_ROUTE)}>
+
+            Voltar ao início
+
+          </Button>
+
         </View>
+
       </SafeAreaView>
+
     );
+
   }
+
+
 
   if (!result) {
+
     return <LoadingView />;
+
   }
 
+
+
   return (
-    <SafeAreaView style={styles.safe}>
+
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+
+      <StackScreenChrome onBack={handleBack} />
+
       <ScrollView
+
         contentContainerStyle={styles.scrollContent}
+
         showsVerticalScrollIndicator={false}
+
       >
+
         <ResultSummaryView result={result} />
+
         <Button fullWidth onPress={() => router.push(DETAILS_ROUTE)}>
+
           Ver detalhes
+
         </Button>
+
+        <Button variant="outline" fullWidth onPress={() => router.replace(HOME_ROUTE)}>
+
+          Voltar ao início
+
+        </Button>
+
       </ScrollView>
+
     </SafeAreaView>
+
   );
+
 }
 
+
+
 const styles = StyleSheet.create({
+
   safe: {
+
     flex: 1,
+
     backgroundColor: theme.colors.background,
+
   },
+
   loadingContent: {
+
     flex: 1,
+
     alignItems: "center",
+
     justifyContent: "center",
+
     gap: theme.spacing.md,
+
     paddingHorizontal: theme.spacing.lg,
+
   },
+
   loadingText: {
+
     ...theme.typography.caption,
+
     textAlign: "center",
+
   },
+
   centerContent: {
+
     flex: 1,
+
     justifyContent: "center",
+
     paddingHorizontal: theme.spacing.lg,
+
     gap: theme.spacing.md,
+
   },
+
   scrollContent: {
-    paddingHorizontal: theme.spacing.sm + 4,
-    paddingTop: theme.spacing.md,
+
+    paddingHorizontal: theme.spacing.lg,
+
+    paddingTop: theme.spacing.xs,
+
     paddingBottom: theme.spacing.xl,
-    gap: theme.spacing.sm + 4,
+
+    gap: theme.spacing.md,
+
   },
+
   errorText: {
+
     fontSize: 15,
+
     lineHeight: 22,
+
     color: theme.colors.error,
+
     textAlign: "center",
+
   },
+
 });
+
+

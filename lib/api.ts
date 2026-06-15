@@ -4,6 +4,10 @@ import type {
   CommunityRatingSource,
   CommunityRatingValue,
   PeekAnalysisResult,
+  PlaceEvaluationResponse,
+  PlaceEvaluationStatus,
+  PlaceSearchResponse,
+  UserProgression,
 } from "@/types/peek";
 import { config, isApiConfigured, isSupabaseConfigured } from "./config";
 import { getSupabase } from "./supabase";
@@ -56,7 +60,7 @@ function normalizeRequest(session: CaptureSession): AnalyzeRequest {
   };
 }
 
-function getAnalyzeUrl(): string {
+function getApiBaseUrl(): string {
   if (!isApiConfigured()) {
     throw new AnalyzeApiError(
       "API não configurada. Defina EXPO_PUBLIC_API_URL no arquivo .env.",
@@ -65,10 +69,28 @@ function getAnalyzeUrl(): string {
     );
   }
 
-  const base = config.apiUrl.replace(/\/$/, "");
-  return `${base}/api/analyze`;
+  return config.apiUrl.replace(/\/$/, "");
 }
 
+function getAnalyzeUrl(): string {
+  return `${getApiBaseUrl()}/api/analyze`;
+}
+
+function getAnalyzePlaceUrl(): string {
+  return `${getApiBaseUrl()}/api/analyze/place`;
+}
+
+function getPlacesSearchUrl(query: string, lat?: number, lng?: number): string {
+  const url = new URL(`${getApiBaseUrl()}/api/places/search`);
+  url.searchParams.set("q", query);
+  if (lat != null && Number.isFinite(lat)) {
+    url.searchParams.set("lat", String(lat));
+  }
+  if (lng != null && Number.isFinite(lng)) {
+    url.searchParams.set("lng", String(lng));
+  }
+  return url.toString();
+}
 function parseErrorMessage(data: unknown, status: number): string {
   if (
     typeof data === "object" &&
@@ -124,12 +146,84 @@ export async function analyzeCapture(
   session: CaptureSession
 ): Promise<PeekAnalysisResult> {
   const body = normalizeRequest(session);
+  return postAnalyzeRequest(getAnalyzeUrl(), body);
+}
+
+export async function analyzePlace(placeId: string): Promise<PeekAnalysisResult> {
+  const trimmedPlaceId = placeId.trim();
+  if (!trimmedPlaceId) {
+    throw new AnalyzeApiError(
+      "Estabelecimento inválido.",
+      undefined,
+      "validation"
+    );
+  }
+
+  return postAnalyzeRequest(getAnalyzePlaceUrl(), { placeId: trimmedPlaceId });
+}
+
+export async function searchPlaces(
+  query: string,
+  options?: { lat?: number; lng?: number }
+): Promise<PlaceSearchResponse> {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) {
+    throw new AnalyzeApiError(
+      "Digite o nome do estabelecimento.",
+      undefined,
+      "validation"
+    );
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15_000);
+
+  try {
+    const headers = await getAuthHeaders();
+    const response = await fetch(
+      getPlacesSearchUrl(trimmedQuery, options?.lat, options?.lng),
+      {
+        method: "GET",
+        headers,
+        signal: controller.signal,
+      }
+    );
+
+    let data: unknown;
+
+    try {
+      data = await response.json();
+    } catch {
+      throw new AnalyzeApiError(
+        "Resposta inválida do servidor.",
+        response.status,
+        "unknown"
+      );
+    }
+
+    if (!response.ok) {
+      const message = parseErrorMessage(data, response.status);
+      throw new AnalyzeApiError(message, response.status, "analysis");
+    }
+
+    return data as PlaceSearchResponse;
+  } catch (error) {
+    throw toAnalyzeError(error);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function postAnalyzeRequest(
+  url: string,
+  body: AnalyzeRequest | { placeId: string }
+): Promise<PeekAnalysisResult> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), ANALYZE_TIMEOUT_MS);
 
   try {
     const headers = await getAuthHeaders();
-    const response = await fetch(getAnalyzeUrl(), {
+    const response = await fetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
@@ -163,18 +257,8 @@ export async function analyzeCapture(
     clearTimeout(timeoutId);
   }
 }
-
 function getCommunityRatingUrl(establishmentKey?: string): string {
-  if (!isApiConfigured()) {
-    throw new AnalyzeApiError(
-      "API não configurada. Defina EXPO_PUBLIC_API_URL no arquivo .env.",
-      undefined,
-      "config"
-    );
-  }
-
-  const base = config.apiUrl.replace(/\/$/, "");
-  if (establishmentKey) {
+  const base = getApiBaseUrl();  if (establishmentKey) {
     return `${base}/api/community-rating?establishmentKey=${encodeURIComponent(establishmentKey)}`;
   }
   return `${base}/api/community-rating`;
@@ -242,4 +326,75 @@ export async function submitCommunityRatingVote(input: {
   }
 
   return data as CommunityRatingSource;
+}
+
+function getPlaceEvaluationUrl(placeId?: string): string {
+  const base = getApiBaseUrl();
+  if (placeId) {
+    return `${base}/api/place-evaluation?placeId=${encodeURIComponent(placeId)}`;
+  }
+  return `${base}/api/place-evaluation`;
+}
+
+export async function fetchPlaceEvaluationStatus(
+  placeId: string
+): Promise<PlaceEvaluationStatus | null> {
+  try {
+    const headers = await getAuthHeaders();
+    const response = await fetch(getPlaceEvaluationUrl(placeId), { headers });
+
+    if (!response.ok) return null;
+    return (await response.json()) as PlaceEvaluationStatus;
+  } catch {
+    return null;
+  }
+}
+
+export async function submitPlaceEvaluation(input: {
+  placeId: string;
+  visitedPlace: boolean;
+  experienceRating: CommunityRatingValue;
+  wouldReturn: boolean;
+  consultationSource: "photo" | "search";
+}): Promise<PlaceEvaluationResponse> {
+  const headers = await getAuthHeaders();
+  const response = await fetch(getPlaceEvaluationUrl(), {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      place_id: input.placeId,
+      visited_place: input.visitedPlace,
+      experience_rating: input.experienceRating,
+      would_return: input.wouldReturn,
+      consultation_source: input.consultationSource,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new AnalyzeApiError(
+      typeof data?.error === "string"
+        ? data.error
+        : "Falha ao salvar avaliação.",
+      response.status,
+      response.status === 401 ? "validation" : "unknown"
+    );
+  }
+
+  return data as PlaceEvaluationResponse;
+}
+
+export async function fetchUserProgression(): Promise<UserProgression | null> {
+  try {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${getApiBaseUrl()}/api/user-progression`, {
+      headers,
+    });
+
+    if (!response.ok) return null;
+    return (await response.json()) as UserProgression;
+  } catch {
+    return null;
+  }
 }

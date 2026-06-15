@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { User } from "@supabase/supabase-js";
 import { signOut as authSignOut } from "@/lib/auth";
+import { clearPeekSession } from "@/lib/session";
 import {
   isDevBypassAuthEnabled,
   isSupabaseConfigured,
@@ -70,8 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     setDevBypass(false);
-    if (!isConfigured) return;
-    await authSignOut();
+    await clearPeekSession();
+
+    if (isConfigured) {
+      await authSignOut();
+    }
+
     setUser(null);
   }, [isConfigured]);
 

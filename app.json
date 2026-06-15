@@ -12,7 +12,9 @@
       "supportsTablet": false,
       "infoPlist": {
         "NSCameraUsageDescription": "Peek precisa da câmera para fotografar a fachada do estabelecimento.",
-        "NSLocationWhenInUseUsageDescription": "Peek usa sua localização para identificar o estabelecimento."
+        "NSLocationWhenInUseUsageDescription": "Peek usa sua localização para identificar o estabelecimento.",
+        "NSUserNotificationsUsageDescription": "Peek pode enviar notificações sobre suas análises e atualizações.",
+        "NSPhotoLibraryUsageDescription": "Peek precisa acessar suas fotos para selecionar imagens de estabelecimentos."
       }
     },
     "android": {
@@ -27,6 +29,8 @@
         "android.permission.CAMERA",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.READ_MEDIA_IMAGES",
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -55,6 +59,19 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Peek usa sua localização para identificar o estabelecimento."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "default",
+          "enableBackgroundRemoteNotifications": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Peek precisa acessar suas fotos para selecionar imagens de estabelecimentos."
         }
       ],
       "expo-web-browser"

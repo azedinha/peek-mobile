@@ -124,6 +124,70 @@ export interface CaptureSession {
   lng: number;
   accuracy?: number;
   capturedAt: string;
+  placeId?: string;
+  searchQuery?: string;
+  /** Consulta elegível para avaliação pós-detalhes (não definido no histórico). */
+  eligibleForEvaluation?: boolean;
+  /** Origem da consulta para o fluxo de avaliação. */
+  consultationSource?: "photo" | "search";
+}
+
+export type ExperienceRatingValue = CommunityRatingValue;
+
+export interface PlaceEvaluationStatus {
+  placeId: string;
+  alreadyRated: boolean;
+}
+
+export interface PlaceEvaluationSubmission {
+  place_id: string;
+  visited_place: boolean;
+  experience_rating: ExperienceRatingValue;
+  would_return: boolean;
+  created_at: string;
+}
+
+export interface PlaceEvaluationResponse {
+  evaluation: PlaceEvaluationSubmission;
+  progression: UserProgression;
+  points?: {
+    total_awarded: number;
+    awards: Array<{
+      event_type: string;
+      points: number;
+      awarded: boolean;
+      reason?: string;
+    }>;
+  };
+}
+
+export interface UserProgression {
+  user_id: string;
+  total_points: number;
+  total_reviews: number;
+  level: string;
+  level_label: string;
+  level_number: number;
+  previous_level_points: number;
+  next_level_points: number | null;
+  points_to_next_level: number | null;
+  progress_percent: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlaceSearchResult {
+  placeId: string;
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
+  types?: string[];
+  category: string | null;
+}
+
+export interface PlaceSearchResponse {
+  results: PlaceSearchResult[];
 }
 
 export interface AnalysisHistoryEntry {

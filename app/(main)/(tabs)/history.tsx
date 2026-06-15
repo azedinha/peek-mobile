@@ -1,11 +1,13 @@
 import { useCallback, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HistoryEntryCard } from "@/components/history/HistoryEntryCard";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Button } from "@/components/ui/Button";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { getHistoryEntries, restoreHistoryEntry } from "@/lib/history";
+import { CAMERA_ROUTE, RESULT_ROUTE, SEARCH_ROUTE } from "@/lib/routes";
 import { theme } from "@/constants/theme";
 import type { AnalysisHistoryEntry } from "@/types/peek";
 
@@ -31,7 +33,7 @@ export default function HistoryScreen() {
   const handleOpen = async (id: string) => {
     const restored = await restoreHistoryEntry(id);
     if (!restored) return;
-    router.push("/(main)/result");
+    router.push(RESULT_ROUTE);
   };
 
   if (entries === null) {
@@ -39,19 +41,12 @@ export default function HistoryScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <Pressable
-          accessibilityLabel="Voltar"
-          style={styles.backButton}
-          onPress={() => router.replace("/(main)/camera")}
-        >
-          <Text style={styles.backChevron}>‹</Text>
-        </Pressable>
-        <View style={styles.headerText}>
-          <Text style={styles.eyebrow}>Histórico</Text>
-          <Text style={styles.title}>Consultas anteriores</Text>
-        </View>
+        <ScreenHeader
+          eyebrow="Histórico"
+          title="Consultas anteriores"
+        />
       </View>
 
       {entries.length > 0 ? (
@@ -68,11 +63,17 @@ export default function HistoryScreen() {
       ) : (
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>
-            Nenhuma análise salva ainda. Fotografe um estabelecimento para
-            começar seu histórico.
+            Nenhuma análise salva ainda. Fotografe um estabelecimento ou busque
+            por nome para começar seu histórico.
           </Text>
-          <Button onPress={() => router.replace("/(main)/camera")}>
-            Ir para câmera
+          <Button onPress={() => router.navigate(CAMERA_ROUTE)}>
+            Fotografar estabelecimento
+          </Button>
+          <Button
+            variant="outline"
+            onPress={() => router.navigate(SEARCH_ROUTE)}
+          >
+            Buscar por nome
           </Button>
         </View>
       )}
@@ -86,46 +87,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.sm + 4,
+    paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.sm,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backChevron: {
-    fontSize: 26,
-    lineHeight: 28,
-    color: theme.colors.primary,
-    marginTop: -2,
-  },
-  headerText: {
-    flex: 1,
-    gap: 2,
-  },
-  eyebrow: {
-    ...theme.typography.caption,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: theme.colors.primary,
-    lineHeight: 26,
-  },
   listContent: {
-    paddingHorizontal: theme.spacing.sm + 4,
+    paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.sm,
     paddingBottom: theme.spacing.xl,
   },
@@ -137,13 +104,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.md,
+    gap: theme.spacing.sm,
   },
   emptyText: {
     ...theme.typography.caption,
     textAlign: "center",
     lineHeight: 20,
     maxWidth: 280,
+    marginBottom: theme.spacing.xs,
   },
 });
 

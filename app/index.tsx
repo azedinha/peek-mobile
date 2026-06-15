@@ -1,6 +1,7 @@
 import { Redirect } from "expo-router";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { useAuth } from "@/hooks/useAuth";
+import { HOME_ROUTE, LOGIN_ROUTE } from "@/lib/routes";
 
 export default function Index() {
   const { canAccessApp, loading } = useAuth();
@@ -10,8 +11,8 @@ export default function Index() {
   }
 
   if (canAccessApp) {
-    return <Redirect href="/(main)/camera" />;
+    return <Redirect href={HOME_ROUTE} />;
   }
 
-  return <Redirect href="/(auth)/login" />;
+  return <Redirect href={LOGIN_ROUTE} />;
 }
