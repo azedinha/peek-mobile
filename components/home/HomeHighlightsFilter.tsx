@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { HIGHLIGHT_FILTER_OPTIONS } from "@/lib/home-mock";
+import { HIGHLIGHT_FILTER_OPTIONS } from "@/lib/home-highlights";
 import { theme } from "@/constants/theme";
 import type { HighlightCategoryFilter } from "@/types/home";
 

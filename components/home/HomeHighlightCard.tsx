@@ -33,7 +33,9 @@ export function HomeHighlightCard({
         )}
         <View style={styles.ratingPill}>
           <Ionicons name="star" size={12} color={theme.colors.primary} />
-          <Text style={styles.rating}>{item.rating.toFixed(1)}</Text>
+          <Text style={styles.rating}>
+            {item.rating != null ? item.rating.toFixed(1) : "—"}
+          </Text>
         </View>
       </View>
 
