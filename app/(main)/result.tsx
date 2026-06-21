@@ -20,6 +20,7 @@ import { ResultSummaryView } from "@/components/result/ResultViews";
 import { useAuth } from "@/hooks/useAuth";
 
 import { runAnalysisForSession } from "@/lib/analyze-session";
+import { AnalyzeApiError, getAnalyzeApiDiagnostics } from "@/lib/api";
 
 import {
 
@@ -57,6 +58,8 @@ export default function ResultScreen() {
   const [result, setResult] = useState<PeekAnalysisResult | null>(null);
 
   const [error, setError] = useState<string | null>(null);
+
+  const [errorDebug, setErrorDebug] = useState<string | null>(null);
 
   const fetchedRef = useRef(false);
 
@@ -148,7 +151,29 @@ export default function ResultScreen() {
 
             : "Falha na análise. Tente novamente.";
 
+        const rawDetail =
+          err instanceof AnalyzeApiError && err.rawErrorDetail
+            ? err.rawErrorDetail
+            : err instanceof Error
+              ? `[${err.name}] ${err.message}${err.stack ? `\n${err.stack}` : ""}`
+              : String(err);
+
+        const diagnostics = getAnalyzeApiDiagnostics();
+
         setError(message);
+
+        setErrorDebug(
+          [
+            "— Diagnóstico (temporário) —",
+            "",
+            "Erro original:",
+            rawDetail,
+            "",
+            `config.apiUrl: ${diagnostics.apiUrl}`,
+            `isApiConfigured(): ${String(diagnostics.isApiConfigured)}`,
+            `POST /api/analyze: ${diagnostics.analyzeUrl}`,
+          ].join("\n")
+        );
 
         setState("error");
 
@@ -192,11 +217,20 @@ export default function ResultScreen() {
 
         <StackScreenChrome onBack={handleBack} />
 
-        <View style={styles.centerContent}>
+        <ScrollView
+          contentContainerStyle={styles.centerContent}
+          showsVerticalScrollIndicator={false}
+        >
 
           <ScreenHeader eyebrow="Resultado" title="Análise indisponível" />
 
           <Text style={styles.errorText}>{error}</Text>
+
+          {errorDebug ? (
+            <Text selectable style={styles.debugText}>
+              {errorDebug}
+            </Text>
+          ) : null}
 
           <Button fullWidth onPress={() => router.replace(CAMERA_ROUTE)}>
 
@@ -210,7 +244,7 @@ export default function ResultScreen() {
 
           </Button>
 
-        </View>
+        </ScrollView>
 
       </SafeAreaView>
 
@@ -300,11 +334,13 @@ const styles = StyleSheet.create({
 
   centerContent: {
 
-    flex: 1,
+    flexGrow: 1,
 
     justifyContent: "center",
 
     paddingHorizontal: theme.spacing.lg,
+
+    paddingVertical: theme.spacing.lg,
 
     gap: theme.spacing.md,
 
@@ -331,6 +367,26 @@ const styles = StyleSheet.create({
     color: theme.colors.error,
 
     textAlign: "center",
+
+  },
+
+  debugText: {
+
+    fontSize: 11,
+
+    lineHeight: 16,
+
+    fontFamily: "Courier",
+
+    color: theme.colors.textSecondary,
+
+    textAlign: "left",
+
+    backgroundColor: theme.colors.surface,
+
+    borderRadius: theme.radius.md,
+
+    padding: theme.spacing.sm,
 
   },
 

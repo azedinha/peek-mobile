@@ -8,17 +8,19 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "bundleIdentifier": "com.peek.app",
+      "icon": "./assets/icon.png",
+      "bundleIdentifier": "com.diegorozzante.peek",
       "supportsTablet": false,
       "infoPlist": {
         "NSCameraUsageDescription": "Peek precisa da câmera para fotografar a fachada do estabelecimento.",
         "NSLocationWhenInUseUsageDescription": "Peek usa sua localização para identificar o estabelecimento.",
         "NSUserNotificationsUsageDescription": "Peek pode enviar notificações sobre suas análises e atualizações.",
-        "NSPhotoLibraryUsageDescription": "Peek precisa acessar suas fotos para selecionar imagens de estabelecimentos."
+        "NSPhotoLibraryUsageDescription": "Peek precisa acessar suas fotos para selecionar imagens de estabelecimentos.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.peek.app",
+      "package": "com.diegorozzante.peek",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",

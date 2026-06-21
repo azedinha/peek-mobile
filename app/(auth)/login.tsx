@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/Button";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { useAuth } from "@/hooks/useAuth";
 import { signInWithOAuth } from "@/lib/auth";
-import { isDevBypassAuthEnabled, isSupabaseConfigured } from "@/lib/config";
+import { isSupabaseConfigured } from "@/lib/config";
 import { HOME_ROUTE } from "@/lib/routes";
 import { theme } from "@/constants/theme";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { loading, continueWithoutLogin } = useAuth();
+  const { loading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isConfigured = isSupabaseConfigured();
@@ -27,16 +27,15 @@ export default function LoginScreen() {
     try {
       await signInWithOAuth(provider);
       router.replace(HOME_ROUTE);
-    } catch {
-      setError("Não foi possível iniciar o login. Tente novamente.");
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Não foi possível iniciar o login. Tente novamente.";
+      setError(message);
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleContinueWithoutLogin = () => {
-    continueWithoutLogin();
-    router.replace(HOME_ROUTE);
   };
 
   if (loading) {
@@ -82,11 +81,6 @@ export default function LoginScreen() {
           >
             Entrar com Google
           </Button>
-          {isDevBypassAuthEnabled() && (
-            <Button variant="ghost" fullWidth onPress={handleContinueWithoutLogin}>
-              Continuar sem login
-            </Button>
-          )}
         </View>
 
         {error && <Text style={styles.error}>{error}</Text>}

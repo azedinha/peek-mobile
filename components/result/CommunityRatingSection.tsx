@@ -111,8 +111,8 @@ export function CommunityRatingSection({
       <Text style={styles.meta}>
         {stats.totalVotes === 0
           ? "Seja o primeiro a avaliar este estabelecimento."
-          : `${stats.totalVotes.toLocaleString("pt-BR")} avaliação${
-              stats.totalVotes === 1 ? "" : "ões"
+          : `${stats.totalVotes.toLocaleString("pt-BR")} ${
+              stats.totalVotes === 1 ? "avaliação" : "avaliações"
             } da comunidade Peek`}
       </Text>
 

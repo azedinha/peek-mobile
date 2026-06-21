@@ -66,6 +66,8 @@ import {
 
 } from "@/lib/camera-zoom";
 
+import { prepareCapturePhoto } from "@/lib/capture-photo";
+
 import {
 
   clearAnalysisResult,
@@ -532,7 +534,7 @@ export default function CameraScreen() {
 
   const finalizePhoto = useCallback(
 
-    async (base64: string) => {
+    async (photoDataUrl: string) => {
 
       const locationPermission = await ensureForegroundLocationPermission();
 
@@ -562,15 +564,13 @@ export default function CameraScreen() {
 
       const capturedAt = new Date().toISOString();
 
-      const dataUrl = `data:image/jpeg;base64,${base64}`;
-
 
 
       await clearAnalysisResult();
 
       await saveCaptureSession({
 
-        photo: dataUrl,
+        photo: photoDataUrl,
 
         lat: position.coords.latitude,
 
@@ -614,9 +614,9 @@ export default function CameraScreen() {
 
       const photo = await cameraRef.current.takePictureAsync({
 
-        quality: 0.88,
+        quality: 1,
 
-        base64: true,
+        base64: false,
 
         skipProcessing: false,
 
@@ -624,7 +624,7 @@ export default function CameraScreen() {
 
 
 
-      if (!photo?.base64) {
+      if (!photo?.uri) {
 
         throw new Error("Falha ao processar a imagem.");
 
@@ -632,7 +632,19 @@ export default function CameraScreen() {
 
 
 
-      await finalizePhoto(photo.base64);
+      const prepared = await prepareCapturePhoto({
+
+        uri: photo.uri,
+
+        width: photo.width,
+
+        height: photo.height,
+
+      });
+
+
+
+      await finalizePhoto(prepared.dataUrl);
 
     } catch (captureError) {
 
@@ -688,15 +700,15 @@ export default function CameraScreen() {
 
         allowsEditing: false,
 
-        quality: 0.88,
+        quality: 1,
 
-        base64: true,
+        base64: false,
 
       });
 
 
 
-      if (result.canceled || !result.assets[0]?.base64) {
+      if (result.canceled || !result.assets[0]?.uri) {
 
         return;
 
@@ -706,7 +718,19 @@ export default function CameraScreen() {
 
       setIsCapturing(true);
 
-      await finalizePhoto(result.assets[0].base64);
+      const asset = result.assets[0];
+
+      const prepared = await prepareCapturePhoto({
+
+        uri: asset.uri,
+
+        width: asset.width,
+
+        height: asset.height,
+
+      });
+
+      await finalizePhoto(prepared.dataUrl);
 
     } catch (pickError) {
 

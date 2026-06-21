@@ -7,7 +7,6 @@ import type {
   PlaceEvaluationResponse,
   PlaceEvaluationStatus,
   PlaceSearchResponse,
-  UserProgression,
 } from "@/types/peek";
 import { config, isApiConfigured, isSupabaseConfigured } from "./config";
 import { getSupabase } from "./supabase";
@@ -25,12 +24,49 @@ export type AnalyzeErrorKind =
 export class AnalyzeApiError extends Error {
   readonly status?: number;
   readonly kind: AnalyzeErrorKind;
+  /** Erro bruto antes do mapeamento — diagnóstico temporário. */
+  rawErrorDetail?: string;
 
   constructor(message: string, status?: number, kind: AnalyzeErrorKind = "unknown") {
     super(message);
     this.name = "AnalyzeApiError";
     this.status = status;
     this.kind = kind;
+  }
+}
+
+/** Diagnóstico temporário da configuração de API (tela de erro). */
+export function getAnalyzeApiDiagnostics(): {
+  apiUrl: string;
+  isApiConfigured: boolean;
+  analyzeUrl: string;
+} {
+  const apiUrl = config.apiUrl;
+  const configured = isApiConfigured();
+  const baseUrl = configured ? apiUrl.replace(/\/$/, "") : apiUrl;
+  const analyzeUrl = configured ? `${baseUrl}/api/analyze` : "(indisponível — API não configurada)";
+
+  return {
+    apiUrl: apiUrl || "(vazio)",
+    isApiConfigured: configured,
+    analyzeUrl,
+  };
+}
+
+function formatAnalyzeRawError(error: unknown): string {
+  if (error instanceof AnalyzeApiError) {
+    return `[AnalyzeApiError] kind=${error.kind} status=${error.status ?? "n/a"} message=${error.message}`;
+  }
+
+  if (error instanceof Error) {
+    const stack = error.stack ? `\n${error.stack}` : "";
+    return `[${error.name}] ${error.message}${stack}`;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
   }
 }
 
@@ -221,6 +257,17 @@ async function postAnalyzeRequest(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), ANALYZE_TIMEOUT_MS);
 
+  if ("photo" in body) {
+    const diagnostics = getAnalyzeApiDiagnostics();
+    console.log("[peek/analyze] pre-fetch", {
+      baseUrl: diagnostics.isApiConfigured
+        ? config.apiUrl.replace(/\/$/, "")
+        : config.apiUrl || "(vazio)",
+      endpoint: url,
+      photoSizeChars: body.photo.length,
+    });
+  }
+
   try {
     const headers = await getAuthHeaders();
     const response = await fetch(url, {
@@ -252,7 +299,13 @@ async function postAnalyzeRequest(
 
     return data as PeekAnalysisResult;
   } catch (error) {
-    throw toAnalyzeError(error);
+    const rawErrorDetail = formatAnalyzeRawError(error);
+    console.log("[peek/analyze] raw error before mapping:", rawErrorDetail, error);
+    const mapped = toAnalyzeError(error);
+    if (!(error instanceof AnalyzeApiError)) {
+      mapped.rawErrorDetail = rawErrorDetail;
+    }
+    throw mapped;
   } finally {
     clearTimeout(timeoutId);
   }
@@ -383,18 +436,4 @@ export async function submitPlaceEvaluation(input: {
   }
 
   return data as PlaceEvaluationResponse;
-}
-
-export async function fetchUserProgression(): Promise<UserProgression | null> {
-  try {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${getApiBaseUrl()}/api/user-progression`, {
-      headers,
-    });
-
-    if (!response.ok) return null;
-    return (await response.json()) as UserProgression;
-  } catch {
-    return null;
-  }
 }

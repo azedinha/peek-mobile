@@ -29,14 +29,7 @@ export function getDisplayFirstName(user: User | null): string {
   return DEFAULT_FIRST_NAME;
 }
 
-export function getDisplayFullName(
-  user: User | null,
-  options?: { isGuest?: boolean }
-): string {
-  if (options?.isGuest) {
-    return "Visitante";
-  }
-
+export function getDisplayFullName(user: User | null): string {
   const fullName = readMetadataName(user);
   if (fullName) {
     return fullName;
@@ -63,13 +56,6 @@ export function getUserAvatarUrl(user: User | null): string | null {
   return typeof raw === "string" && raw.trim() ? raw.trim() : null;
 }
 
-export function getUserEmailLabel(
-  user: User | null,
-  options?: { isGuest?: boolean }
-): string {
-  if (options?.isGuest) {
-    return "Modo desenvolvimento";
-  }
-
+export function getUserEmailLabel(user: User | null): string {
   return user?.email ?? "E-mail não disponível";
 }

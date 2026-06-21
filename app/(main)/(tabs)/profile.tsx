@@ -10,6 +10,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import { ProfileActionRow, ProfileDivider } from "@/components/profile/ProfileActionRow";
+import { LinkedProvidersSection } from "@/components/profile/LinkedProvidersSection";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileSection } from "@/components/profile/ProfileSection";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
@@ -26,13 +27,12 @@ import { theme } from "@/constants/theme";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, devBypass, signOut } = useAuth();
-  const isGuest = devBypass && !user;
+  const { user, signOut } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
 
-  const name = getDisplayFullName(user, { isGuest });
-  const email = getUserEmailLabel(user, { isGuest });
-  const avatarUrl = isGuest ? null : getUserAvatarUrl(user);
+  const name = getDisplayFullName(user);
+  const email = getUserEmailLabel(user);
+  const avatarUrl = getUserAvatarUrl(user);
 
   const openExternalUrl = useCallback(async (url: string | null, label: string) => {
     if (!url) {
@@ -85,6 +85,8 @@ export default function ProfileScreen() {
           <ProfileDivider />
           <ProfileActionRow label="E-mail" value={email} showChevron={false} />
         </ProfileSection>
+
+        <LinkedProvidersSection />
 
         <ProfileSection title="Privacidade">
           <ProfileActionRow

@@ -149,31 +149,6 @@ export interface PlaceEvaluationSubmission {
 
 export interface PlaceEvaluationResponse {
   evaluation: PlaceEvaluationSubmission;
-  progression: UserProgression;
-  points?: {
-    total_awarded: number;
-    awards: Array<{
-      event_type: string;
-      points: number;
-      awarded: boolean;
-      reason?: string;
-    }>;
-  };
-}
-
-export interface UserProgression {
-  user_id: string;
-  total_points: number;
-  total_reviews: number;
-  level: string;
-  level_label: string;
-  level_number: number;
-  previous_level_points: number;
-  next_level_points: number | null;
-  points_to_next_level: number | null;
-  progress_percent: number;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface PlaceSearchResult {
